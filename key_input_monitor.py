@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Script Name: key_input_monitor.py
 # Author: CrazyDog
-# Version: 1.0
+# Github:https://github.com/icrazydog
+# Version: 1.1
 # Created: 07/23/2018
-# Last Modified: 07/23/2018
+# Last Modified: 08/03/2018
 # Description: Monitor press and release event of keyboard
 # Usage: import key_input_monitor as keyinput
 #        def onKeyEvent(pressed_key,released_key):
@@ -37,11 +38,11 @@ def close_echo():
 def open_echo():
     global old_ttyinfo
     fd = sys.stdin.fileno()
-    termios.tcsetattr(fd, termios.TCSANOW, old_ttyinfo)
+    termios.tcsetattr(fd, termios.TCSAFLUSH, old_ttyinfo)
 
 # clean screen
 def cls():
-    print "\033c"
+    print("\033c")
 
 # start monitor
 def start(onKeyEvent):
@@ -63,6 +64,7 @@ def __start(onKeyEvent):
     display = x11.XOpenDisplay(None)
     keyboard = (ctypes.c_char * 32)()
 
+    print('key input monitor start')
     pressed_key = set()
     last_pressed_key = set()
     released_key = set()
@@ -73,8 +75,20 @@ def __start(onKeyEvent):
         for i, byte_str in enumerate(keyboard):
             key = ord(byte_str)
             if(key>0):
-                pressed_key.add((i, key))
-                        
+                if key & 1 > 0:
+                    pressed_key.add((i, 1))
+                if key & 2 > 0:
+                    pressed_key.add((i, 2))
+                if key & 4 > 0:
+                    pressed_key.add((i, 4))
+                if key & 16 > 0:
+                    pressed_key.add((i, 16))
+                if key & 32 > 0:
+                    pressed_key.add((i, 32))
+                if key & 64 > 0:
+                    pressed_key.add((i, 64))
+                if key & 128 > 0:
+                    pressed_key.add((i, 128))
 
         released_key = last_pressed_key.difference(pressed_key)
         newPressed = pressed_key.difference(last_pressed_key)
@@ -82,3 +96,5 @@ def __start(onKeyEvent):
 
         if len(newPressed)>0 or len(released_key)>0:
             onKeyEvent(newPressed,released_key)
+    
+    print('key input monitor stop')
